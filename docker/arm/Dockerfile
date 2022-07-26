@@ -14,5 +14,5 @@
 
 FROM multiarch/alpine:armhf-v3.12
 RUN apk update --no-cache && apk add ca-certificates
-COPY nfs-subdir-external-provisioner /nfs-subdir-external-provisioner
-ENTRYPOINT ["/nfs-subdir-external-provisioner"]
+COPY external-provisioner-localpath /external-provisioner-localpath
+ENTRYPOINT ["/external-provisioner-localpath"]

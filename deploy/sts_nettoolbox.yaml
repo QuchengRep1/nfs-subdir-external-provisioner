@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nettoolbox
+  namespace: default
+spec:
+  serviceName: nettoolbox
+  replicas: 6
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: net
+  template:
+    metadata:
+      labels:
+        app: net
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: Asia/Shanghai
+          image: 192.168.100.105/tools/nettoolbox:v2.0
+          imagePullPolicy: IfNotPresent
+          name: nettoolbox
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources: {}
+          securityContext:
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /tmp
+              name: nginx-storage
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+
+  volumeClaimTemplates:
+    - metadata:
+        name: nginx-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName:
+          localpath
+        resources:
+          requests:
+            storage: 1Gi

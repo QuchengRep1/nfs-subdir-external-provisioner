@@ -13,9 +13,9 @@
 # limitations under the License.
 
 FROM gcr.io/distroless/static:latest
-LABEL maintainers="Kubernetes Authors"
-LABEL description="NFS subdir external provisioner"
-ARG binary=./bin/nfs-subdir-external-provisioner
+LABEL maintainers="Qu.Cheng."
+LABEL description="external-provisioner-localpath"
+ARG binary=./bin/external-provisioner-localpath
 
-COPY ${binary} /nfs-subdir-external-provisioner
-ENTRYPOINT ["/nfs-subdir-external-provisioner"]
+COPY ${binary} /external-provisioner-localpath
+ENTRYPOINT ["/external-provisioner-localpath"]

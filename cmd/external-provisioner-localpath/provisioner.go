@@ -43,9 +43,8 @@ const (
 	provisionerNameKey = "PROVISIONER_NAME"
 )
 
-type nfsProvisioner struct {
+type localProvisioner struct {
 	client kubernetes.Interface
-	server string
 	path   string
 }
 
@@ -77,9 +76,9 @@ const (
 	mountPath = "/persistentvolumes"
 )
 
-var _ controller.Provisioner = &nfsProvisioner{}
+var _ controller.Provisioner = &localProvisioner{}
 
-func (p *nfsProvisioner) Provision(ctx context.Context, options controller.ProvisionOptions) (*v1.PersistentVolume, controller.ProvisioningState, error) {
+func (p *localProvisioner) Provision(ctx context.Context, options controller.ProvisionOptions) (*v1.PersistentVolume, controller.ProvisioningState, error) {
 	if options.PVC.Spec.Selector != nil {
 		return nil, controller.ProvisioningFinished, fmt.Errorf("claim Selector is not supported")
 	}
@@ -152,7 +151,7 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 	return pv, controller.ProvisioningFinished, nil
 }
 
-func (p *nfsProvisioner) Delete(ctx context.Context, volume *v1.PersistentVolume) error {
+func (p *localProvisioner) Delete(ctx context.Context, volume *v1.PersistentVolume) error {
 	path := volume.Spec.PersistentVolumeSource.NFS.Path
 	basePath := filepath.Base(path)
 	oldPath := filepath.Join(mountPath, basePath)
@@ -198,7 +197,7 @@ func (p *nfsProvisioner) Delete(ctx context.Context, volume *v1.PersistentVolume
 }
 
 // getClassForVolume returns StorageClass.
-func (p *nfsProvisioner) getClassForVolume(ctx context.Context, pv *v1.PersistentVolume) (*storage.StorageClass, error) {
+func (p *localProvisioner) getClassForVolume(ctx context.Context, pv *v1.PersistentVolume) (*storage.StorageClass, error) {
 	if p.client == nil {
 		return nil, fmt.Errorf("cannot get kube client")
 	}
@@ -218,13 +217,9 @@ func main() {
 	flag.Parse()
 	flag.Set("logtostderr", "true")
 
-	server := os.Getenv("NFS_SERVER")
-	if server == "" {
-		glog.Fatal("NFS_SERVER not set")
-	}
-	path := os.Getenv("NFS_PATH")
+	path := os.Getenv("LOCAL_PATH")
 	if path == "" {
-		glog.Fatal("NFS_PATH not set")
+		glog.Fatal("LOCAL_PATH not set")
 	}
 	provisionerName := os.Getenv(provisionerNameKey)
 	if provisionerName == "" {
@@ -271,9 +266,8 @@ func main() {
 		}
 	}
 
-	clientNFSProvisioner := &nfsProvisioner{
+	clientNFSProvisioner := &localProvisioner{
 		client: clientset,
-		server: server,
 		path:   path,
 	}
 	// Start the provision controller which will dynamically provision efs NFS
@@ -286,5 +280,6 @@ func main() {
 		controller.LeaderElection(leaderElection),
 	)
 	// Never stops.
-	pc.Run(context.Background())
+	context := context.Background()
+	pc.Run(context)
 }

@@ -1,4 +1,4 @@
-module github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+module github.com/QuchengRep1/external-provisioner-localpath
 
 go 1.14
 
