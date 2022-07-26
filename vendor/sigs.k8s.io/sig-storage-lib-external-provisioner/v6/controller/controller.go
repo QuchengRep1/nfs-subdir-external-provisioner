@@ -871,6 +871,7 @@ func (ctrl *ProvisionController) Run(ctx context.Context) {
 		select {}
 	}
 
+
 	go ctrl.volumeStore.Run(ctx, DefaultThreadiness)
 
 	if ctrl.leaderElection {

@@ -120,6 +120,9 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 		return nil, "", err
 	}
 
+	HostPathType := new(v1.HostPathType)
+	*HostPathType = v1.HostPathDirectoryOrCreate
+
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: options.PVName,
@@ -131,11 +134,17 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 			Capacity: v1.ResourceList{
 				v1.ResourceName(v1.ResourceStorage): options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)],
 			},
+			//PersistentVolumeSource: v1.PersistentVolumeSource{
+			//	NFS: &v1.NFSVolumeSource{
+			//		Server:   p.server,
+			//		Path:     path,
+			//		ReadOnly: false,
+			//	},
+			//},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
-				NFS: &v1.NFSVolumeSource{
-					Server:   p.server,
-					Path:     path,
-					ReadOnly: false,
+				HostPath: &v1.HostPathVolumeSource{
+					Path: path,
+					Type: HostPathType,
 				},
 			},
 		},
@@ -240,6 +249,7 @@ func main() {
 			glog.Fatalf("Failed to create config: %v", err)
 		}
 	}
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		glog.Fatalf("Failed to create client: %v", err)
@@ -268,7 +278,8 @@ func main() {
 	}
 	// Start the provision controller which will dynamically provision efs NFS
 	// PVs
-	pc := controller.NewProvisionController(clientset,
+	pc := controller.NewProvisionController(
+		clientset,
 		provisionerName,
 		clientNFSProvisioner,
 		serverVersion.GitVersion,
