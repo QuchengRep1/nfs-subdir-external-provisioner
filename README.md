@@ -37,3 +37,4 @@ kubectl delete pod nettoolbox-0/1/2/3/XXX
 kubectl patch statefulset/nettoolbox -p '{"spec":{"replicas":0}}' --type=merge
 查看replicas副本数至零后，pv和pvc任保留在本地，且在副本数提升后，pv能携带数据重新关联
 ```
+![img_1.png](img_1.png)
